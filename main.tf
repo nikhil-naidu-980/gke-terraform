@@ -74,6 +74,9 @@ resource "google_container_cluster" "gke" {
   # Explicitly reference the custom VPC subnetwork
   subnetwork = google_compute_subnetwork.public_subnet.id  # Correct reference to the public subnet
 
+  # Explicitly disable deletion protection
+  deletion_protection = false
+
   # Configure private cluster
   private_cluster_config {
     enable_private_nodes    = true
@@ -97,10 +100,22 @@ resource "google_project_iam_member" "gke_service_account_role" {
   member  = "serviceAccount:${google_service_account.gke_service_account.email}"
 }
 
-# IAM Role for the GKE Node (required to access the GKE nodes)
+# IAM Roles for the GKE Node (required to access the GKE nodes)
 resource "google_project_iam_member" "gke_node_role" {
   project = "rare-hub-452618-j9"
   role    = "roles/compute.instanceAdmin"
+  member  = "serviceAccount:${google_service_account.gke_service_account.email}"
+}
+
+resource "google_project_iam_member" "gke_node_pull_images" {
+  project = "rare-hub-452618-j9"
+  role    = "roles/storage.objectViewer"
+  member  = "serviceAccount:${google_service_account.gke_service_account.email}"
+}
+
+resource "google_project_iam_member" "gke_service_account_artifact_registry" {
+  project = "rare-hub-452618-j9"
+  role    = "roles/artifactregistry.reader"
   member  = "serviceAccount:${google_service_account.gke_service_account.email}"
 }
 
