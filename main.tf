@@ -183,3 +183,25 @@ resource "kubernetes_deployment" "nginx_app_deployment" {
     }
   }
 }
+
+# Create the Service for the Nginx Deployment
+resource "kubernetes_service" "nginx_app_service" {
+  metadata {
+    name      = "nginx-app-service"
+    namespace = kubernetes_namespace.nginx_app_namespace.metadata[0].name
+  }
+
+  spec {
+    selector = {
+      app = "nginx-app"
+    }
+
+    port {
+      port        = 80
+      target_port = 80
+    }
+
+    # Cluster IP is the default and exposes the service within the cluster
+    type = "ClusterIP"
+  }
+}
