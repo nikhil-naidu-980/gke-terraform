@@ -135,3 +135,51 @@ resource "google_container_node_pool" "node_pool" {
     service_account = google_service_account.gke_service_account.email
   }
 }
+
+# Create Namespace for the application
+resource "kubernetes_namespace" "nginx_app_namespace" {
+  metadata {
+    name = "nginx-app-namespace"
+  }
+}
+
+resource "kubernetes_deployment" "nginx_app_deployment" {
+  metadata {
+    name      = "nginx-app-deployment"
+    namespace = kubernetes_namespace.nginx_app_namespace.metadata[0].name
+    labels = {
+      app = "nginx-app"
+    }
+  }
+
+  spec {
+    replicas = 1
+    selector {
+      match_labels = {
+        app = "nginx-app"
+      }
+    }
+
+    template {
+      metadata {
+        labels = {
+          app = "nginx-app"
+        }
+      }
+
+      spec {
+        node_selector = {
+          "cloud.google.com/gke-nodepool" = google_container_node_pool.node_pool.name
+        }
+
+        container {
+          name  = "nginx-app-container"
+          image = "nginx:latest"  # Replace with your image if necessary
+          port {
+            container_port = 80
+          }
+        }
+      }
+    }
+  }
+}
