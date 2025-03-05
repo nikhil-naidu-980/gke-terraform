@@ -4,6 +4,15 @@ provider "google" {
   project = "rare-hub-452618-j9"
 }
 
+data "google_client_config" "default" {}
+
+# Kubernetes provider configuration for connecting to the GKE cluster
+provider "kubernetes" {
+  host                   = "https://${google_container_cluster.gke.endpoint}"
+  cluster_ca_certificate = base64decode(google_container_cluster.gke.master_auth[0].cluster_ca_certificate)
+  token                  = data.google_client_config.default.access_token
+}
+
 # Create the VPC
 resource "google_compute_network" "vpc" {
   name                    = "gke-vpc"
