@@ -25,7 +25,7 @@ resource "google_compute_subnetwork" "public_subnet" {
   region        = "us-west1"
   network       = google_compute_network.vpc.id  # Ensure this subnet is in the custom VPC
   ip_cidr_range = "10.0.1.0/24"
-  private_ip_google_access = false
+  private_ip_google_access = true
 }
 
 # Create the private subnet, also linked to the custom VPC
