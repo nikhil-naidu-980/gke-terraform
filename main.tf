@@ -154,7 +154,7 @@ resource "kubernetes_deployment" "nginx_app_deployment" {
   }
 
   spec {
-    replicas = 1 # Increased for better availability
+    replicas = 1 
     selector {
       match_labels = {
         app = "nginx-app"
@@ -167,7 +167,7 @@ resource "kubernetes_deployment" "nginx_app_deployment" {
           app = "nginx-app"
         }
         annotations = {
-          "cloud.google.com/neg" = jsonencode({"exposed_ports" = {"80" = {}}}) # Enable NEG on pod level
+          "cloud.google.com/neg" = jsonencode({"exposed_ports" = {"80" = {}}}) 
         }
       }
 
@@ -210,4 +210,16 @@ resource "kubernetes_service" "nginx_app_service" {
 
     type = "ClusterIP"
   }
+}
+
+# External data source to fetch the NEG name dynamically
+data "external" "fetch_neg_name" {
+  depends_on = [kubernetes_service.nginx_app_service] 
+  program    = ["bash", "${path.module}/fetch_neg_name.sh"]
+}
+
+data "google_compute_network_endpoint_group" "nginx_neg" {
+  depends_on = [kubernetes_service.nginx_app_service]
+  name       = data.external.fetch_neg_name.result["neg_name"] 
+  zone       = "us-west1-a"
 }
