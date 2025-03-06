@@ -273,3 +273,22 @@ resource "google_compute_url_map" "global-lb" {
     }
   }
 }
+
+# Global Static IP
+resource "google_compute_global_address" "nginx_lb_ip" {
+  name = "nginx-lb-ip"
+}
+
+# HTTP Target Proxy
+resource "google_compute_target_http_proxy" "nginx_lb_target_proxy" {
+  name    = "nginx-lb-target-proxy"
+  url_map = google_compute_url_map.global-lb.self_link
+}
+
+# Global Forwarding Rule
+resource "google_compute_global_forwarding_rule" "nginx_lb_forwarding_rule" {
+  name       = "nginx-lb-forwarding-rule"
+  target     = google_compute_target_http_proxy.nginx_lb_target_proxy.self_link
+  port_range = "80"
+  ip_address = google_compute_global_address.nginx_lb_ip.address
+}
