@@ -237,3 +237,18 @@ resource "google_compute_health_check" "nginx_health_check" {
     request_path = "/"
   }
 }
+
+# Backend Service with NEG
+resource "google_compute_backend_service" "nginx_backend" {
+  name        = "nginx-backend"
+  protocol    = "HTTP"
+  timeout_sec = 30
+
+  backend {
+    group            = data.google_compute_network_endpoint_group.nginx_neg.id # Updated reference
+    balancing_mode   = "RATE"
+    max_rate_per_endpoint = 100
+  }
+
+  health_checks = [google_compute_health_check.nginx_health_check.self_link]
+}
