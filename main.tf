@@ -252,3 +252,24 @@ resource "google_compute_backend_service" "nginx_backend" {
 
   health_checks = [google_compute_health_check.nginx_health_check.self_link]
 }
+
+# URL Map
+resource "google_compute_url_map" "global-lb" {
+  name            = "global-lb"
+  default_service = google_compute_backend_service.nginx_backend.self_link
+
+  host_rule {
+    hosts        = ["www.test-app.com"] # Replace with your domain
+    path_matcher = "nginx-path-matcher"
+  }
+
+  path_matcher {
+    name            = "nginx-path-matcher"
+    default_service = google_compute_backend_service.nginx_backend.self_link
+
+    path_rule {
+      paths   = ["/nginx"]
+      service = google_compute_backend_service.nginx_backend.self_link
+    }
+  }
+}
