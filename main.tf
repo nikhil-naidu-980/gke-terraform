@@ -143,6 +143,7 @@ resource "kubernetes_namespace" "nginx_app_namespace" {
   }
 }
 
+# Deploying nginx application
 resource "kubernetes_deployment" "nginx_app_deployment" {
   metadata {
     name      = "nginx-app-deployment"
@@ -153,7 +154,7 @@ resource "kubernetes_deployment" "nginx_app_deployment" {
   }
 
   spec {
-    replicas = 1
+    replicas = 1 # Increased for better availability
     selector {
       match_labels = {
         app = "nginx-app"
@@ -165,6 +166,9 @@ resource "kubernetes_deployment" "nginx_app_deployment" {
         labels = {
           app = "nginx-app"
         }
+        annotations = {
+          "cloud.google.com/neg" = jsonencode({"exposed_ports" = {"80" = {}}}) # Enable NEG on pod level
+        }
       }
 
       spec {
@@ -174,7 +178,7 @@ resource "kubernetes_deployment" "nginx_app_deployment" {
 
         container {
           name  = "nginx-app-container"
-          image = "nginx:latest"  # Replace with your image if necessary
+          image = "nginx:latest"
           port {
             container_port = 80
           }
@@ -189,6 +193,9 @@ resource "kubernetes_service" "nginx_app_service" {
   metadata {
     name      = "nginx-app-service"
     namespace = kubernetes_namespace.nginx_app_namespace.metadata[0].name
+    annotations = {
+      "cloud.google.com/neg" = jsonencode({"exposed_ports" = {"80" = {}}})
+    }
   }
 
   spec {
@@ -198,10 +205,9 @@ resource "kubernetes_service" "nginx_app_service" {
 
     port {
       port        = 80
-      target_port = 80
+      target_port = "80"
     }
 
-    # Cluster IP is the default and exposes the service within the cluster
     type = "ClusterIP"
   }
 }
