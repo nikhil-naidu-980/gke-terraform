@@ -223,3 +223,17 @@ data "google_compute_network_endpoint_group" "nginx_neg" {
   name       = data.external.fetch_neg_name.result["neg_name"] 
   zone       = "us-west1-a"
 }
+
+# HTTP Health Check
+resource "google_compute_health_check" "nginx_health_check" {
+  name               = "nginx-health-check"
+  check_interval_sec = 10
+  timeout_sec        = 5
+  healthy_threshold  = 2
+  unhealthy_threshold = 2
+
+  http_health_check {
+    port         = 80
+    request_path = "/"
+  }
+}
